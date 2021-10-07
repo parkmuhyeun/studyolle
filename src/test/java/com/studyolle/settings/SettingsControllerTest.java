@@ -4,15 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studyolle.WithAccount;
 import com.studyolle.account.AccountRepository;
 import com.studyolle.account.AccountService;
-import com.studyolle.account.SignUpForm;
 import com.studyolle.domain.Account;
 import com.studyolle.domain.Tag;
 import com.studyolle.domain.Zone;
-import com.studyolle.settings.form.TagForm;
-import com.studyolle.settings.form.ZoneForm;
+import com.studyolle.tag.TagForm;
+import com.studyolle.zone.ZoneForm;
 import com.studyolle.tag.TagRepository;
 import com.studyolle.zone.ZoneRepository;
-import org.aspectj.lang.annotation.After;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,8 +20,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.test.context.support.TestExecutionEvent;
-import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 

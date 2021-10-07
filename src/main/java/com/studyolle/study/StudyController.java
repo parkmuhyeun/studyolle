@@ -42,8 +42,9 @@ public class StudyController {
     }
 
     @PostMapping("/new-study")
-    public String newStudySubmit(@CurrentAccount Account account, @Valid StudyForm studyForm, Errors errors) {
+    public String newStudySubmit(@CurrentAccount Account account, @Valid StudyForm studyForm, Errors errors, Model model) {
         if (errors.hasErrors()) {
+            model.addAttribute(account);
             return "study/form";
         }
 
@@ -53,9 +54,32 @@ public class StudyController {
 
     @GetMapping("/study/{path}")
     public String viewStudy(@CurrentAccount Account account, @PathVariable String path, Model model) {
+        Study study = studyService.getStudy(path);
         model.addAttribute(account);
-        model.addAttribute(studyRepository.findByPath(path));
+        model.addAttribute(study);
         return "study/view";
+    }
+
+    @GetMapping("/study/{path}/members")
+    public String viewStudyMembers(@CurrentAccount Account account, @PathVariable String path, Model model) {
+        Study study = studyService.getStudy(path);
+        model.addAttribute(account);
+        model.addAttribute(study);
+        return "study/members";
+    }
+
+    @GetMapping("/study/{path}/join")
+    public String joinStudy(@CurrentAccount Account account, @PathVariable String path, Model model) {
+        Study study = studyRepository.findStudyWithMembersByPath(path);
+        studyService.addMember(study, account);
+        return "redirect:/study/" + study.getEncodedPath() + "/members";
+    }
+
+    @GetMapping("/study/{path}/leave")
+    public String leaveStudy(@CurrentAccount Account account, @PathVariable String path, Model model) {
+        Study study = studyRepository.findStudyWithMembersByPath(path);
+        studyService.removeMember(study, account);
+        return "redirect:/study/" + study.getEncodedPath() + "/members";
     }
 
 }
