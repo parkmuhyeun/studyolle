@@ -11,21 +11,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-
+@Transactional
 @SpringBootTest
 @AutoConfigureMockMvc
+@RequiredArgsConstructor
 class StudyControllerTest {
 
-    @Autowired StudyService studyService;
-    @Autowired StudyRepository studyRepository;
-    @Autowired AccountRepository accountRepository;
-    @Autowired MockMvc mockMvc;
+    @Autowired protected StudyService studyService;
+    @Autowired protected StudyRepository studyRepository;
+    @Autowired protected AccountRepository accountRepository;
+    @Autowired protected MockMvc mockMvc;
 
     @Test
     @WithAccount("muhyun")
@@ -95,5 +97,56 @@ class StudyControllerTest {
                 .andExpect(model().attributeExists("account"))
                 .andExpect(model().attributeExists("study"));
     }
+
+    @Test
+    @WithAccount("muhyun")
+    @DisplayName("스터디 가입")
+    void joinStudy() throws Exception {
+        Account whiteship = createAccount("whiteship");
+
+        Study study = createStudy("test-study", whiteship);
+
+        mockMvc.perform(get("/study/" + study.getPath() + "/join"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/study/" + study.getPath() + "/members"));
+
+        Account muhyun = accountRepository.findByNickname("muhyun");
+        assertTrue(study.getMembers().contains(muhyun));
+    }
+
+    @Test
+    @WithAccount("muhyun")
+    @DisplayName("스터디 탈퇴")
+    void leaveStudy() throws Exception {
+        Account whiteship = createAccount("whiteship");
+        Study study = createStudy("test-study", whiteship);
+
+        Account muhyun = accountRepository.findByNickname("muhyun");
+        studyService.addMember(study, muhyun);
+
+        mockMvc.perform(get("/study/" + study.getPath() + "/leave"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/study/" + study.getPath() + "/members"));
+
+        assertFalse(study.getMembers().contains(muhyun));
+    }
+
+
+
+    protected Study createStudy(String path, Account manager) {
+        Study study = new Study();
+        study.setPath(path);
+        studyService.createNewStudy(study, manager);
+        return study;
+    }
+
+    protected Account createAccount(String nickname) {
+        Account account = new Account();
+        account.setNickname(nickname);
+        account.setEmail(nickname + "@email.com");
+        accountRepository.save(account);
+        return account;
+    }
+
 
 }
