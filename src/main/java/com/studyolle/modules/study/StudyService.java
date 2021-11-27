@@ -1,11 +1,14 @@
 package com.studyolle.modules.study;
 
 import com.studyolle.modules.account.Account;
+import com.studyolle.modules.study.event.StudyCreatedEvent;
+import com.studyolle.modules.study.event.StudyUpdateEvent;
 import com.studyolle.modules.tag.Tag;
 import com.studyolle.modules.zone.Zone;
 import com.studyolle.modules.study.form.StudyDescriptionForm;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +22,7 @@ public class StudyService {
 
     private final StudyRepository studyrepository;
     private final ModelMapper modelMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     public Study createNewStudy(Study study, Account account) {
         Study newStudy = studyrepository.save(study);
@@ -42,6 +46,7 @@ public class StudyService {
 
     public void updateStudyDescription(Study study, StudyDescriptionForm studyDescriptionForm) {
         modelMapper.map(studyDescriptionForm, study);
+        eventPublisher.publishEvent(new StudyUpdateEvent(study, "스터디 소개를 수정했습니다."));
     }
 
     public void updateStudyImage(Study study, String image) {
@@ -107,18 +112,22 @@ public class StudyService {
 
     public void publish(Study study) {
         study.publish();
+        this.eventPublisher.publishEvent(new StudyCreatedEvent(study));
     }
 
     public void close(Study study) {
         study.close();
+        eventPublisher.publishEvent(new StudyUpdateEvent(study, "스터디를 종료했습니다."));
     }
 
     public void startRecruit(Study study) {
         study.startRecruit();
+        eventPublisher.publishEvent(new StudyUpdateEvent(study, "팀원 모집을 시작합니다."));
     }
 
     public void stopRecruit(Study study) {
         study.stopRecruit();
+        eventPublisher.publishEvent(new StudyUpdateEvent(study, "팀원 모집을 중단했습니다."));
     }
 
     public boolean isValidPath(String newPath) {
